@@ -35,12 +35,10 @@
   [client]
   (letfn [(fetch [req]
             (let [{:keys [cursor result]} (client req)]
-              (println (format "SEQUENTIAL: %s" (sequential? (:query (:query-params req)))))
-              (println (format "    CURSOR: %s" cursor))
-              (println (format "      NAME: %s" (prn-str (map :name result))))
               (if (sequential? (:query (:query-params req)))
-                (lazy-seq
-                 (concat result (if cursor (fetch (assoc-in req [:query-params :cursor] cursor)))))
+                (->> (if cursor (fetch (assoc-in req [:query-params :cursor] cursor)))
+                     (concat result)
+                     (lazy-seq))
                 result)))]
     #(fetch %1)))
 
@@ -61,61 +59,3 @@
       :as :auto
       :url *mql-read-url*
       :query-params {:cursor nil :query (do ~@body)}}))
-
-(comment
-
-  (defquery continents []
-    "Fetch continents from Freebase."
-    [{:type "/base/locations/continents"
-      :guid nil
-      :name nil}])
-
-  (defquery countries []
-    "Fetch countries from Freebase."
-    [{:type "/base/locations/countries"
-      :guid nil
-      :name nil
-      :continent {:guid nil :name nil}}])
-
-  (defquery languages []
-    "Fetch languages from Freebase."
-    [{:type "/language/human_language"
-      :name nil
-      :guid nil
-      :iso_639_1_code []
-      :iso_639_2_code []
-      :iso_639_3_code []}])
-
-  (defquery companies []
-    "Fetch companies from Freebase."
-    [{:type "/organization/organization"
-      :guid nil
-      :name []}])
-
-  (defquery stock-exchanges []
-    "Fetch Stock Exchanged from Freebase."
-    [{:type "/finance/stock_exchange"
-      :guid nil
-      :name []
-      :/finance/stock_exchange/companies_traded [{}]}])
-
-  (continents)
-  (first (countries))
-
-  (clojure.pprint/pprint (take 2 (stock-exchanges)))
-
-  (count (stock-exchanges))
-
-  (take 5 (companies))
-
-  (clojure.pprint/pprint (take 10 (continents)))
-
-  (keyword "ISO 639-3 Code")
-
-  (let [xs (languages)]
-    (doseq [x xs]
-      (clojure.pprint/pprint x)
-      (println))
-    (println (str "TOTAL: " (count xs))))
-
-  )
