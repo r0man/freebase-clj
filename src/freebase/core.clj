@@ -2,8 +2,6 @@
   (:require [cheshire.core :as json]
             [clj-http.client :as client]))
 
-(def ^:dynamic *api-key* nil)
-
 (def ^:dynamic *mql-read-url*
   "https://www.googleapis.com/freebase/v1/mqlread")
 
@@ -29,7 +27,8 @@
   "Returns a `client` that decodes the Freebase JSON response."
   [client]
   (fn [request]
-    (json/decode (:body (client request)) true)))
+    (let [{:keys [body] :as request} (client request)]
+      body)))
 
 (defn wrap-cursor
   "Returns a `client` that handles Freebase cursors as a lazy sequence."
@@ -45,27 +44,23 @@
                 result)))]
     #(fetch %1)))
 
-(def request
+(defn client
+  "Returns a Freebase HTTP client."
+  [& [oauth-token]]
   (-> client/request
-      (wrap-api-key nil)
-      wrap-input-coercion
-      wrap-output-coercion
-      wrap-cursor))
+      (wrap-api-key oauth-token)
+      (wrap-input-coercion)
+      (wrap-output-coercion)
+      (wrap-cursor)))
 
 (defmacro defquery
   "Define a Freebase query."
-  [name args doc query & [req]]
+  [name doc args & body]
   `(defn ~name ~doc [~@args & [~'req]]
-     (request (merge {:method :get
-                      :url *mql-read-url*
-                      :query-params {:cursor nil :query ~query}}
-                     ~req ~'req))))
-
-(defmacro with-freebase
-  "Evaluate `body` with *api-key* bound to `api-key`."
-  [api-key & body]
-  `(binding [*api-key* ~api-key]
-     ~@body))
+     {:method :get
+      :as :auto
+      :url *mql-read-url*
+      :query-params {:cursor nil :query (do ~@body)}}))
 
 (comment
 
