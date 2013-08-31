@@ -28,7 +28,9 @@
   [client]
   (fn [request]
     (let [{:keys [body] :as request} (client request)]
-      body)))
+      (if (instance? clojure.lang.IMeta body)
+        (with-meta body (dissoc request :body))
+        body))))
 
 (defn wrap-cursor
   "Returns a `client` that handles Freebase cursors as a lazy sequence."
