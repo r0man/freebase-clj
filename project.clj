@@ -1,4 +1,4 @@
-(defproject freebase-clj "0.1.0-SNAPSHOT"
+(defproject freebase-clj "0.1.0"
   :description "Clojure Library for Freebase."
   :url "https://github.com/r0man/freebase-clj"
   :license {:name "Eclipse Public License"
