@@ -10,3 +10,4 @@ pom.xml
 .lein-plugins
 /.nrepl-port
 /logs/debug.log
+/pom.xml.asc
