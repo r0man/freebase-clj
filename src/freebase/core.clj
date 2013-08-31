@@ -44,7 +44,7 @@
                 result)))]
     #(fetch %1)))
 
-(defn client
+(defn freebase-client
   "Returns a Freebase HTTP client."
   [& [oauth-token]]
   (-> client/request
@@ -53,11 +53,13 @@
       (wrap-output-coercion)
       (wrap-cursor)))
 
-(defmacro defquery
-  "Define a Freebase query."
-  [name doc args & body]
-  `(defn ~name ~doc [~@args & [~'req]]
-     {:method :get
-      :as :auto
-      :url *mql-read-url*
-      :query-params {:cursor nil :query (do ~@body)}}))
+(defn query
+  "Send the query `q` to Freebase via `client` and return the result."
+  ([q]
+     (query (freebase-client) q))
+  ([client q]
+     (client
+      {:method :get
+       :as :auto
+       :url *mql-read-url*
+       :query-params {:cursor nil :query q}})))

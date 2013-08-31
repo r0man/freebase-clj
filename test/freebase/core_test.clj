@@ -2,14 +2,8 @@
   (:require [clojure.test :refer :all]
             [freebase.core :refer :all]))
 
-(def query (client))
-
-(defquery police-albums
-  "Returns the album of `The Police`."
-  []
-  {:type :/music/artist
-   :name "The Police"
-   :album []})
+(def police-albums
+  {:type :/music/artist :name "The Police" :album []})
 
 (deftest test-wrap-api-key
   (is (= {}
@@ -21,19 +15,13 @@
   (is (= {} ((wrap-input-coercion identity) {})))
   (is (= {:query-params {:query "{\"type\":\"/music/artist\",\"name\":\"The Police\",\"album\":[]}"}}
          ((wrap-input-coercion identity)
-          {:query-params {:query {:type :/music/artist :name "The Police" :album []}}}))))
+          {:query-params {:query police-albums}}))))
 
-(deftest test-wrap-output-coercion
-  )
+(deftest test-freebase-client
+  (is (fn? (freebase-client)))
+  (is (fn? (freebase-client "API-KEY"))))
 
-(deftest test-police-albums-request
-  (is (= {:query-params {:cursor nil, :query {:type :/music/artist, :name "The Police", :album []}}
-          :method :get
-          :as :auto
-          :url "https://www.googleapis.com/freebase/v1/mqlread"}
-         (police-albums))))
-
-(deftest test-police-albums-query
+(deftest test-police-albums
   (is (= {:album
           ["Outlandos d'Amour"
            "Reggatta de Blanc"
@@ -83,4 +71,4 @@
            "Can't Stand Losing You"],
           :name "The Police",
           :type "/music/artist"}
-         (query (police-albums)))))
+         (query police-albums))))
